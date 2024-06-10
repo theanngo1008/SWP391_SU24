@@ -1,5 +1,7 @@
-﻿using BE.Helper;
+﻿using BE.Entities;
+using BE.Helper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using System.Data;
@@ -11,20 +13,40 @@ namespace BE.Controllers
     [ApiController]
     public class JewelryController : ControllerBase
     {
-        private IConfiguration _configuration;
-        private readonly IWebHostEnvironment environment;
 
-        //public JewelryController(IConfiguration configuration)
-        //{
-        //    _configuration = configuration;
-        //}
-        public JewelryController(IWebHostEnvironment environment)
+        private readonly JewelrySystemDbContext _context;
+
+        private readonly IHostEnvironment _env;
+
+        public JewelryController(IHostEnvironment env)
         {
-            this.environment = environment;
+            _env = env;
+        }
+        // Configure Firebase
+        private static string apiKey = "AIzaSyCXOJSqeJWUWGzN2bN31XdiZURckizm4fI";
+        private static string Bucket = "projectswp-7bb14.appspot.com";
+        private static string AuthEmail = "Huydqse151428@fpt.edu.vn";
+        private static string AuthPassword = "Kid30032001";
+
+        public JewelryController(JewelrySystemDbContext context)
+        {
+            _context = context;
         }
 
-        [HttpPut("UploadImage")]
-        public async Task<IActionResult> UploadImage(IFormFile formFile, string productCode) 
+        [HttpPost]
+        private async Task<IActionResult> Index(Jewelry jewelry)  
+        {
+            var jewelryUpload = jewelry.Image;
+            if (jewelryUpload.Length > 0)
+            {
+                //Upload the file to firebase
+                string folderName = "firebaseFiles";
+                //string path = Path.Combine(_env.WebRootPath, $" images/")
+            }
+            return BadRequest();
+        }
+
+        /*public async Task<IActionResult> UploadImage(IFormFile formFile, string productCode) 
         {
             APIResponse response = new APIResponse();
             try
@@ -55,14 +77,14 @@ namespace BE.Controllers
         }
 
         [HttpPut("MultiUploadImage")]
-        public async Task<IActionResult> MultiUploadImage(IFormFileCollection fileCollection, string productCode)
+        public async Task<IActionResult> MultiUploadImage(IFormFileCollection fileCollection, int jewelryId)
         {
             APIResponse response = new APIResponse();
             int passCount = 0;
             int errorCount = 0;
             try
             {
-                string FilePath = GetFilepath(productCode);
+                var jewelry = await _context.Jewelries.FindAsync(jewelryId);
                 if (!System.IO.Directory.Exists(FilePath))
                 {
                     System.IO.Directory.CreateDirectory(FilePath);

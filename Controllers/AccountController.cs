@@ -1,4 +1,4 @@
-﻿using BE.Models;
+﻿using BE.Entities;
 using Microsoft.AspNetCore. Http;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
@@ -12,14 +12,14 @@ namespace BE.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private IConfiguration _configuration;
+        private readonly JewelrySystemDbContext _context;
 
-        public AccountController(IConfiguration configuration)
+        public AccountController(JewelrySystemDbContext context)
         {
-            _configuration = configuration;
+            _context = context;
         }
 
-        [HttpGet]
+        /*[HttpGet]
         [Route("GetAccounts")]
         public JsonResult GetAccounts()
         {
@@ -39,31 +39,54 @@ namespace BE.Controllers
                 }
             }
             return new JsonResult(table);
-        }
+        }*/
 
-        [HttpPost]
-        [Route("Login")]
-        public JsonResult Login([FromForm] string email, [FromForm] string password) 
+
+        
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            
-            DataTable accTable = ValidateCredentials(email, password);
-            
-            if (accTable.Rows.Count > 0)
+            var email = request.email;
+            var password = request.password;
+
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
             {
-                DataRow accRow = accTable.Rows[0];
-                if (CheckStatus(accRow))
+                return BadRequest("Email and password are required!!!");
+            }
+            var account = await _context.Accounts.SingleOrDefaultAsync(a => a.Email == email);
+            if (account == null)
+            {
+                return Unauthorized("Invalid email or password");
+            }
+            if (account.Password != password)
+            {
+                return Unauthorized("Invalid email or password");
+            }
+            if (account.Status == 3)
+            {
+                return StatusCode(403, "Your account has been banned and you are not allowed to log in");
+            }
+            return Ok(new { 
+                Message = "Login successful",
+                Account = new
                 {
-                    return new JsonResult(accTable);
+                    account.AccName,
+                    account.Email,
+                    account.Password,
+                    account.NumberPhone,
+                    account.Deposit,
+                    account.Address
                 }
-                else
-                    return new JsonResult("The account has been banned");
-            }
-            else
-            {
-                return new JsonResult("Invalid email or password!!!");
-            }
+            });
         }
 
+        public class LoginRequest
+        {
+            public string email { get; set; }
+            public string password { get; set; }
+        }
+
+        /*
         private DataTable ValidateCredentials(string email, string password)
         {
             string query = "select * from Account where Email=@Email and Password=@Password";
@@ -164,7 +187,8 @@ namespace BE.Controllers
             }
             return new JsonResult("Updated Status Successfully");
         }
-    }
+    }*/
 
-    
+
+    }
 }

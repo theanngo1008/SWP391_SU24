@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 
-namespace BE.Models;
+namespace BE.Entities;
 
 public partial class Account
 {

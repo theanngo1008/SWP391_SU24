@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BE.Models;
+namespace BE.Entities;
 
 public partial class Message
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BE.Models;
+namespace BE.Entities;
 
 public partial class Order
 {
@@ -12,6 +12,8 @@ public partial class Order
     public DateOnly? OrderDate { get; set; }
 
     public string? OrderStatus { get; set; }
+
+    public decimal? TotalAmount { get; set; }
 
     public bool? Status { get; set; }
 

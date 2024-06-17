@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace BE.Entities;
 
-public partial class Wage
+public partial class JewelryMakingCharge
 {
-    public int WagesId { get; set; }
+    public int ChargeId { get; set; }
 
-    public string? WagesName { get; set; }
+    public string? ChargeName { get; set; }
 
     public decimal? Price { get; set; }
 

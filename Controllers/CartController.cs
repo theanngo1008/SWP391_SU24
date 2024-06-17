@@ -1,9 +1,9 @@
 ﻿using BE.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using BE.Entities;
 using BE.Extensions;
 using BE.Entities;
+
 
 namespace BE.Controllers
 {
@@ -19,21 +19,34 @@ namespace BE.Controllers
         }
 
         [HttpPost("AddToCart")]
-        public IActionResult AddToCart([FromBody] CartItem item)
+        public async Task<IActionResult> AddToCart(int productId, int quantity)
         {
+            var jewelry = await _context.Jewelries.FindAsync(productId);
+            if (jewelry == null)
+            {
+                return NotFound("Product not found!!!");
+            }
+
             var cart = HttpContext.Session.GetSessionObject<Cart>("Cart") ?? new Cart();
 
-            var existingItem = cart.Items.FirstOrDefault(x => x.ProductId == item.ProductId);
-            if (existingItem != null)
+            var cartItem = cart.Items.FirstOrDefault(item => item.ProductId == productId);
+
+            if (cartItem != null)
             {
-                existingItem.Quantity += item.Quantity;
+                cartItem.Quantity += quantity;
             }
             else
             {
-                cart.Items.Add(item);
+                cart.Items.Add(new CartItem
+                {
+                    ProductId = productId,
+                    Quantity = quantity,
+                    Price = jewelry.Cost.Value //lưu giá sản phẩm vào giỏ
+                });
             }
 
             HttpContext.Session.SetSessionObject("Cart", cart);
+
             return Ok("Product added to cart");
         }
 
@@ -72,10 +85,10 @@ namespace BE.Controllers
                 {
                     JewelryId = cartItem.ProductId,
                     Quantity = cartItem.Quantity,
-                    
-                });
+                    Price = jewelry.Cost.Value
+                }); ;
 
-                order.TotalAmount += jewelry.Cost * cartItem.Quantity;
+
             }
 
             _context.Orders.Add(order);

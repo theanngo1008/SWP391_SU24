@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace BE.Entities;
@@ -23,6 +22,8 @@ public partial class Account
     public string? Role { get; set; }
 
     public int? Status { get; set; }
+
+    public virtual LoyaltyCard? LoyaltyCard { get; set; }
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 

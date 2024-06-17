@@ -7,13 +7,9 @@ public partial class Order
 {
     public int OrderId { get; set; }
 
-    public string? OrderName { get; set; }
-
     public DateOnly? OrderDate { get; set; }
 
     public string? OrderStatus { get; set; }
-
-    public decimal? TotalAmount { get; set; }
 
     public bool? Status { get; set; }
 
@@ -22,8 +18,6 @@ public partial class Order
     public int? ShippingId { get; set; }
 
     public virtual Account? Acc { get; set; }
-
-    public virtual Message? Message { get; set; }
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 

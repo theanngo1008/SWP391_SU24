@@ -7,6 +7,16 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using System.Data;
 using System.Data.SqlClient;
 
+using Firebase.Storage;
+using Firebase.Auth.Providers;
+using Firebase.Auth;
+using FirebaseAdmin;
+using Google.Cloud.Storage.V1;
+using Google.Apis.Auth.OAuth2;
+using static System.Net.Mime.MediaTypeNames;
+using Microsoft.EntityFrameworkCore;
+using BE.Models;
+
 namespace BE.Controllers
 {
     [Route("api/[controller]")]
@@ -16,108 +26,124 @@ namespace BE.Controllers
 
         private readonly JewelrySystemDbContext _context;
 
-        private readonly IHostEnvironment _env;
+        private readonly IConfiguration _config;
 
-        public JewelryController(IHostEnvironment env)
-        {
-            _env = env;
-        }
-        // Configure Firebase
-        private static string apiKey = "AIzaSyCXOJSqeJWUWGzN2bN31XdiZURckizm4fI";
-        private static string Bucket = "projectswp-7bb14.appspot.com";
-        private static string AuthEmail = "Huydqse151428@fpt.edu.vn";
-        private static string AuthPassword = "Kid30032001";
 
-        public JewelryController(JewelrySystemDbContext context)
+
+        public JewelryController(JewelrySystemDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
+        }
+
+
+        [HttpPost]
+        [Route("CreateJewelry")]
+        public async Task<IActionResult> CreateJewelry([FromForm] CreateJewelry createJewelry, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+
+            var stream = file.OpenReadStream();
+            var firebaseStorage = new FirebaseStorage("projectswp-7bb14.appspot.com");
+            var fileName = Path.GetFileName(file.FileName);
+
+
+
+            var task = firebaseStorage
+                .Child("images")
+                .Child(fileName)
+                .PutAsync(stream);
+
+            var downloadUrl = await task;
+
+            var jewelry = new Jewelry
+            {
+                JewelryName = createJewelry.JewelryName,
+                Image = downloadUrl,
+                Cost = createJewelry.Cost,
+                Quantity = createJewelry.Quantity,
+                Status = true,
+                ChargeId = createJewelry.ChargeId,
+                QuotationId = createJewelry.QuotationId,
+                WarehouseId = createJewelry.WarehouseId,
+                SubCateId = createJewelry.SubCateId
+            };
+            
+            _context.Jewelries.Add(jewelry);
+            await _context.SaveChangesAsync();
+            
+            return CreatedAtAction(nameof(GetJewelry), new { id = jewelry.JewelryId }, jewelry);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Jewelry>>> GetJewelries()
+        {
+            return await _context.Jewelries.ToListAsync();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Jewelry>> GetJewelry(int id)
+        {
+            var jewelry = await _context.Jewelries.FindAsync(id);
+
+            if (jewelry == null)
+            {
+                return NotFound();
+            }
+
+            return jewelry;
         }
 
         [HttpPost]
-        private async Task<IActionResult> Index(Jewelry jewelry)  
+        [Route("UploadImage")]
+        public async Task<IActionResult> UploadImage(IFormFile file, [FromForm] int jewelryId)
         {
-            var jewelryUpload = jewelry.Image;
-            if (jewelryUpload.Length > 0)
+            if (file == null || file.Length == 0)
             {
-                //Upload the file to firebase
-                string folderName = "firebaseFiles";
-                //string path = Path.Combine(_env.WebRootPath, $" images/")
+                return BadRequest("No file uploaded.");
             }
-            return BadRequest();
+
+            var jewelry = await _context.Jewelries.FindAsync(jewelryId);
+            if (jewelry == null)
+            {
+                return NotFound("Jewelry not found!!!");
+            }
+
+            var stream = file.OpenReadStream();
+            var firebaseStorage = new FirebaseStorage("projectswp-7bb14.appspot.com");
+            var fileName = Path.GetFileName(file.FileName);
+
+
+
+            var task = firebaseStorage
+                .Child("images")
+                .Child(fileName)
+                .PutAsync(stream);
+
+            var downloadUrl = await task;
+
+            jewelry.Image = downloadUrl;
+            _context.Entry(jewelry).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+
+            return Ok(new { downloadUrl });
         }
 
-        /*public async Task<IActionResult> UploadImage(IFormFile formFile, string productCode) 
+        private void UploadFile(Stream stream, string bucketName, string objectName)
         {
-            APIResponse response = new APIResponse();
-            try
-            {
-               string FilePath = GetFilepath(productCode);
-                if (!System.IO.Directory.Exists(FilePath))
-                {
-                    System.IO.Directory.CreateDirectory(FilePath);
-                }
-
-                string imagePath = FilePath + "\\" + productCode + ".png";
-                if (!System.IO.File.Exists(imagePath))
-                {
-                    System.IO.File.Delete(imagePath);
-                }
-                using (FileStream stream = System.IO.File.Create(imagePath))
-                {
-                    await formFile.CopyToAsync(stream);
-                    response.ResponseCode = 200;
-                    response.Result = "pass";
-                }
-            }
-            catch (Exception ex)
-            {
-                response.Message = ex.Message;
-            }
-            return Ok(response);
+            var storage = StorageClient.Create();
+            stream.Position = 0; // Reset stream position
+            storage.UploadObject(bucketName, objectName, null, stream);
         }
+    }
+}
 
-        [HttpPut("MultiUploadImage")]
-        public async Task<IActionResult> MultiUploadImage(IFormFileCollection fileCollection, int jewelryId)
-        {
-            APIResponse response = new APIResponse();
-            int passCount = 0;
-            int errorCount = 0;
-            try
-            {
-                var jewelry = await _context.Jewelries.FindAsync(jewelryId);
-                if (!System.IO.Directory.Exists(FilePath))
-                {
-                    System.IO.Directory.CreateDirectory(FilePath);
-                }
-                foreach (var file in fileCollection)
-                {
-                    string imagePath = FilePath + "\\" + file.FileName;
-                    if (System.IO.File.Exists(imagePath))
-                    {
-                        System.IO.File.Delete(imagePath);
-                    }
-                    using (FileStream stream = System.IO.File.Create(imagePath))
-                    {
-                        await file.CopyToAsync(stream);
-                        passCount++;
-                    }
-                }  
-            }
-            catch (Exception ex)
-            {
-                errorCount++;
-                response.Message = ex.Message;
-            }
-            response.ResponseCode = 200;
-            response.Result = passCount + " files uploaded &" + errorCount + " files failed";
-            return Ok(response);
-        }
-        [NonAction]
-        private string GetFilepath(string productCode)
-        {
-            return this.environment.WebRootPath + "\\Upload\\jewelry\\" + productCode;
-        }
-
+        
+        /*x
         [HttpGet]
         [Route("GetJewelry")]
         public JsonResult GetJewelries() 
@@ -162,5 +188,5 @@ namespace BE.Controllers
             }
             return new JsonResult(table);
         } */
-    }
-}
+    
+

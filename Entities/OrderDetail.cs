@@ -9,11 +9,11 @@ public partial class OrderDetail
 
     public int? Quantity { get; set; }
 
+    public decimal? Price { get; set; }
+
     public DateOnly? CreateDate { get; set; }
 
     public string? DetailStatus { get; set; }
-
-    public decimal? UnitPrice { get; set; }
 
     public int? JewelryId { get; set; }
 

@@ -1,5 +1,11 @@
-using BE.Entities;
+﻿using BE.Entities;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 //using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,10 +17,44 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//Configuration
-builder.Services.AddControllers();
+//Add services to the container
 builder.Services.AddDbContext<JewelrySystemDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("JewelrySystemDBConn")));
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<JewelrySystemDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireManagerRole", policy => policy.RequireRole("MN"));
+    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("AD"));
+    options.AddPolicy("RequireCustomerRole", policy => policy.RequireRole("US"));
+    options.AddPolicy("RequireSalesStaffRole", policy => policy.RequireRole("SS"));
+    options.AddPolicy("RequireDesignStaffRole", policy => policy.RequireRole("DS"));
+    options.AddPolicy("RequireProductionStaffRole", policy => policy.RequireRole("PS"));
+    // Thêm các chính sách khác nếu cần
+});
+
 
 //Enable CORS
 builder.Services.AddCors(options =>
@@ -36,12 +76,18 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+/*FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile("appsettings.json")
+});*/
+
 var app = builder.Build();
 
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -49,6 +95,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowAll");
+
+app.UseSession();
 
 app.UseAuthentication();
 

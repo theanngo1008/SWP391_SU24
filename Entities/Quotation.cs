@@ -11,6 +11,8 @@ public partial class Quotation
 
     public decimal? TotalPrice { get; set; }
 
+    public decimal? Discount { get; set; }
+
     public string? QuotationStatus { get; set; }
 
     public bool? Status { get; set; }

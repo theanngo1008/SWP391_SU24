@@ -3,8 +3,12 @@ using Microsoft.AspNetCore. Http;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.Data.SqlClient;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace BE.Controllers
 {
@@ -13,35 +17,20 @@ namespace BE.Controllers
     public class AccountController : ControllerBase
     {
         private readonly JewelrySystemDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public AccountController(JewelrySystemDbContext context)
+        public AccountController(JewelrySystemDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
-        /*[HttpGet]
+        [HttpGet]
         [Route("GetAccounts")]
-        public JsonResult GetAccounts()
+        public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
         {
-            string query = "select * from Account";
-            DataTable table = new DataTable();
-            string sqlDatasource = _configuration.GetConnectionString("JewelrySystemDBConn");
-            SqlDataReader myReader;
-            using (SqlConnection myConn = new SqlConnection(sqlDatasource))
-            {
-                myConn.Open();
-                using(SqlCommand myCommand = new SqlCommand(query, myConn))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myConn.Close();
-                }
-            }
-            return new JsonResult(table);
-        }*/
-
-
+            return await _context.Accounts.ToListAsync();
+        }
         
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -66,8 +55,33 @@ namespace BE.Controllers
             {
                 return StatusCode(403, "Your account has been banned and you are not allowed to log in");
             }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]); // Lấy khóa bí mật từ cấu hình
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+            new Claim(ClaimTypes.Name, account.Email),
+            new Claim(ClaimTypes.Role, account.Role),
+            new Claim("AccId", account.AccId.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            string redirectUrl = account.Role switch
+            {
+                "MN" => "/manager/create-product",
+                _ => "/home"
+            };
+
             return Ok(new { 
                 Message = "Login successful",
+                Token = tokenString,
+                RedirectUrl = redirectUrl,
                 Account = new
                 {
                     account.AccName,
@@ -86,109 +100,6 @@ namespace BE.Controllers
             public string password { get; set; }
         }
 
-        /*
-        private DataTable ValidateCredentials(string email, string password)
-        {
-            string query = "select * from Account where Email=@Email and Password=@Password";
-            DataTable table = new DataTable();
-            string sqlDataSource = _configuration.GetConnectionString("JewelrySystemDBConn");
-            SqlDataReader myReader;
-            using (SqlConnection myConn = new SqlConnection(sqlDataSource))
-            {
-                myConn.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myConn))
-                {
-                    myCommand.Parameters.AddWithValue("@Email", email);
-                    myCommand.Parameters.AddWithValue("@Password", password);
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myConn.Close();
-                }
-            }
-            return table;
-        }
         
-        private bool CheckStatus(DataRow accRow)
-        {
-            int status = Convert.ToInt32(accRow["Status"]);
-            return status != 3;
-        }
-
-        [HttpPost]
-        [Route("AddAccounts")]
-        public JsonResult AddAccounts([FromForm] string email, [FromForm] string accName, [FromForm] string password, [FromForm] string phone, [FromForm] string address)
-        {
-            string query = "insert into Account(Email, AccName, Password, NumberPhone, Deposit, Address, Role, Status) values(@Email, @AccName, @Password, @Phone, null, @Address, 'US', 1)";
-            DataTable table = new DataTable();
-            string sqlDatasource = _configuration.GetConnectionString("JewelrySystemDBConn");
-            SqlDataReader myReader;
-            using (SqlConnection myConn = new SqlConnection(sqlDatasource))
-            {
-                myConn.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myConn))
-                {
-                    myCommand.Parameters.AddWithValue("@Email", email);
-                    myCommand.Parameters.AddWithValue("@AccName", accName);
-                    myCommand.Parameters.AddWithValue("@Password", password);
-                    myCommand.Parameters.AddWithValue("@Phone", phone);
-                    myCommand.Parameters.AddWithValue("@Address", address);
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myConn.Close();
-                }
-            }
-            return new JsonResult("Added Successfully");
-        }
-
-        [HttpPost]
-        [Route("UpdateBannedStatus")]
-        public JsonResult UpdateBannedStatus(int id)
-        {
-            string query = "update Account set Status = 3 where AccId = @AccId";
-            DataTable table = new DataTable();
-            string sqlDatasource = _configuration.GetConnectionString("JewelrySystemDBConn");
-            SqlDataReader myReader;
-            using (SqlConnection myConn = new SqlConnection(sqlDatasource))
-            {
-                myConn.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myConn))
-                {
-                    myCommand.Parameters.AddWithValue("@AccId", id);
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myConn.Close();
-                }
-            }
-            return new JsonResult("Updated Status Successfully");
-        }
-
-        [HttpPost]
-        [Route("UpdateAccount")]
-        public JsonResult UpdateAccount(int id)
-        {
-            string query = "update Account set AccName = @AccName, Email = @Email, Password = @Pass, NumberPhone = @Phone, Address = @Address where AccId = @AccId";
-            DataTable table = new DataTable();
-            string sqlDatasource = _configuration.GetConnectionString("JewelrySystemDBConn");
-            SqlDataReader myReader;
-            using (SqlConnection myConn = new SqlConnection(sqlDatasource))
-            {
-                myConn.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myConn))
-                {
-                    myCommand.Parameters.AddWithValue("@AccId", id);
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myConn.Close();
-                }
-            }
-            return new JsonResult("Updated Status Successfully");
-        }
-    }*/
-
-
     }
 }

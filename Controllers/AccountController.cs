@@ -1,8 +1,10 @@
 ﻿using BE.Entities;
+using BE.Models;
 using Microsoft.AspNetCore. Http;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.Data.SqlClient;
@@ -63,8 +65,7 @@ namespace BE.Controllers
                 Subject = new ClaimsIdentity(new Claim[]
                 {
             new Claim(ClaimTypes.Name, account.Email),
-            new Claim(ClaimTypes.Role, account.Role),
-            new Claim("AccId", account.AccId.ToString())
+            new Claim(ClaimTypes.Role, account.Role)
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -74,7 +75,7 @@ namespace BE.Controllers
 
             string redirectUrl = account.Role switch
             {
-                "MN" => "/manager/create-product",
+                "MN" => "/users/jewelry/createJewelry",
                 _ => "/home"
             };
 
@@ -93,13 +94,15 @@ namespace BE.Controllers
                 }
             });
         }
-
-        public class LoginRequest
-        {
-            public string email { get; set; }
-            public string password { get; set; }
-        }
-
         
+        /*
+        [HttpPut("{id}")]
+        [Route("UpdateAccount")]
+        public async Task<ActionResult> UpdateAccount(int id, Account acc)
+        {
+            var result = await 
+        }
+        */
+
     }
 }

@@ -1,16 +1,55 @@
 ﻿using BE.Entities;
+using BE.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace BE.Services
 {
-    public class AccountService
+    public class AccountService 
     {
         private readonly JewelrySystemDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public AccountService (JewelrySystemDbContext context)
+        public AccountService (JewelrySystemDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
+        }
+
+        public async Task<(string Token, string RedirectUrl, Account Account)> Login(LoginRequest request)
+        {
+            var account = await _context.Accounts.SingleOrDefaultAsync(a => a.Email == request.email);
+            if (account == null || account.Password != request.password || account.Status == 3)
+            {
+                return (null, null, null);
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]); // Lấy khóa bí mật từ cấu hình
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, account.Email),
+                    new Claim(ClaimTypes.Role, account.Role)
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            string redirectUrl = account.Role switch
+            {
+                "MN" => "/users/jewelry/createJewelry",
+                _ => "/home"
+            };
+
+            return (tokenString, redirectUrl, account);
         }
 
         public async Task<IEnumerable<Account>> GetAllAccounts()
@@ -18,6 +57,11 @@ namespace BE.Services
             return await _context.Accounts
                 .Where(a => a.Status == 1 || a.Status == 2)
                 .ToListAsync();
+        }
+
+        public async Task<Account> GetAccountByEmail(string email)
+        {
+            return await _context.Accounts.SingleOrDefaultAsync(a => a.Email == email);
         }
 
         public async Task<Account> GetAccountById(int id)
@@ -60,7 +104,29 @@ namespace BE.Services
             return true;
         }
 
-        
+        public async Task<Account> Register(RegisterRequest request)
+        {
+            if (await _context.Accounts.AnyAsync(a => a.Email == request.Email))
+            {
+                throw new Exception("Email is already in use!!!");
+            }
+
+            var account = new Account
+            {
+                Email = request.Email,
+                AccName = request.FullName,
+                NumberPhone = request.NumberPhone,
+                Password = request.Password,
+                Address = request.Address,
+                Role = "US",
+                Status = 1
+            };
+
+            _context.Accounts.Add(account);
+            await _context.SaveChangesAsync();
+
+            return account;
+        }
 
         private bool AccountExists(int id)
         {

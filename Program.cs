@@ -1,4 +1,6 @@
 ﻿using BE.Entities;
+using BE.Models;
+using BE.Services;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,10 +22,15 @@ builder.Services.AddSwaggerGen();
 //Add services to the container
 builder.Services.AddDbContext<JewelrySystemDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("JewelrySystemDBConn")));
+builder.Services.AddHttpClient<SpotMetalPriceService>();
+builder.Services.AddScoped<SpotMetalPriceService>();
+builder.Services.AddScoped<AccountService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<JewelrySystemDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.Configure<GoldApiSettings>(builder.Configuration.GetSection("GoldAPI"));
 
 builder.Services.AddAuthentication(options =>
 {
@@ -80,6 +87,8 @@ builder.Services.AddSession(options =>
 {
     Credential = GoogleCredential.FromFile("appsettings.json")
 });*/
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 var app = builder.Build();
 
@@ -89,8 +98,22 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1"));
 }
+
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next.Invoke();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Exception: {ex.Message}");
+        throw;
+    }
+});
 
 app.UseHttpsRedirection();
 app.UseRouting();

@@ -4,6 +4,6 @@
     {
         public string MetalType {  get; set; }
         public decimal? Price { get; set; }
-        public DateTime? DateCreated { get; set; }
+        public DateTime DateCreated { get; set; }
     }
 }

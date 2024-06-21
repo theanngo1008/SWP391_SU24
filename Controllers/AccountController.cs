@@ -1,5 +1,6 @@
 ﻿using BE.Entities;
 using BE.Models;
+using BE.Services;
 using Microsoft.AspNetCore. Http;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
@@ -19,12 +20,12 @@ namespace BE.Controllers
     public class AccountController : ControllerBase
     {
         private readonly JewelrySystemDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly AccountService _service;
 
-        public AccountController(JewelrySystemDbContext context, IConfiguration configuration)
+        public AccountController(JewelrySystemDbContext context, AccountService service)
         {
             _context = context;
-            _configuration = configuration;
+            _service = service;
         }
 
         [HttpGet]
@@ -35,53 +36,31 @@ namespace BE.Controllers
         }
         
         [HttpPost("Login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login(LoginRequest request)
         {
-            var email = request.email;
-            var password = request.password;
 
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+            if (string.IsNullOrEmpty(request.email) || string.IsNullOrEmpty(request.password))
             {
                 return BadRequest("Email and password are required!!!");
             }
-            var account = await _context.Accounts.SingleOrDefaultAsync(a => a.Email == email);
-            if (account == null)
-            {
-                return Unauthorized("Invalid email or password");
-            }
-            if (account.Password != password)
-            {
-                return Unauthorized("Invalid email or password");
-            }
-            if (account.Status == 3)
-            {
-                return StatusCode(403, "Your account has been banned and you are not allowed to log in");
-            }
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]); // Lấy khóa bí mật từ cấu hình
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
+                var (token, redirectUrl, account) = await _service.Login(request);
+
+                if (token == null)
                 {
-            new Claim(ClaimTypes.Name, account.Email),
-            new Claim(ClaimTypes.Role, account.Role)
-                }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
-
-            string redirectUrl = account.Role switch
-            {
-                "MN" => "/users/jewelry/createJewelry",
-                _ => "/home"
-            };
+                    if (account == null)
+                    {
+                        return Unauthorized();
+                    }
+                    if (account.Status == 3)
+                    {
+                        return StatusCode(403, "Your account has been banned and you are not allowed to log in");
+                    }
+                }
 
             return Ok(new { 
                 Message = "Login successful",
-                Token = tokenString,
+                Token = token,
                 RedirectUrl = redirectUrl,
                 Account = new
                 {
@@ -94,15 +73,37 @@ namespace BE.Controllers
                 }
             });
         }
-        
-        /*
-        [HttpPut("{id}")]
-        [Route("UpdateAccount")]
-        public async Task<ActionResult> UpdateAccount(int id, Account acc)
-        {
-            var result = await 
-        }
-        */
 
+        [HttpPost("Register")]        
+        public async Task<IActionResult> Register(RegisterRequest request)
+        {
+            try
+            {
+                var account = await _service.Register(request);
+                return Ok(new { Message = "Registration successful", Account = account });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("Profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userEmail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (userEmail == null)
+            {
+                return Unauthorized("User is not authenticated!!!");
+            }
+
+            var account = await _service.GetAccountByEmail(userEmail);
+            if (account == null)
+            {
+                return NotFound("User not found!!!");
+            }
+
+            return Ok(account);
+        }
     }
 }

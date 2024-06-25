@@ -16,6 +16,7 @@ using Google.Apis.Auth.OAuth2;
 using static System.Net.Mime.MediaTypeNames;
 using Microsoft.EntityFrameworkCore;
 using BE.Models;
+using BE.Services;
 
 namespace BE.Controllers
 {
@@ -28,12 +29,15 @@ namespace BE.Controllers
 
         private readonly IConfiguration _config;
 
+        private readonly JewelryService _service;
 
 
-        public JewelryController(JewelrySystemDbContext context, IConfiguration config)
+
+        public JewelryController(JewelrySystemDbContext context, IConfiguration config, JewelryService service)
         {
             _context = context;
             _config = config;
+            _service = service;
         }
 
 
@@ -78,7 +82,7 @@ namespace BE.Controllers
             return CreatedAtAction(nameof(GetJewelry), new { id = jewelry.JewelryId }, jewelry);
         }
 
-        [HttpGet]
+        [HttpGet("GetJewelries")]
         public async Task<ActionResult<IEnumerable<Jewelry>>> GetJewelries()
         {
             return await _context.Jewelries.ToListAsync();
@@ -139,54 +143,19 @@ namespace BE.Controllers
             stream.Position = 0; // Reset stream position
             storage.UploadObject(bucketName, objectName, null, stream);
         }
+
+        [HttpPut("UpdateJewelry/{id}")]
+        public async Task<IActionResult> UpdateJewelry(int id, [FromForm] UpdateJewelryRequest request)
+        {
+            var result = await _service.UpdateJewelry(id, request);
+            if (result == null)
+                return NotFound(result);
+            return Ok(result);
+        }
     }
 }
 
         
-        /*x
-        [HttpGet]
-        [Route("GetJewelry")]
-        public JsonResult GetJewelries() 
-        {
-            string query = "select * from Jewelry where status = 1";
-            DataTable table = new DataTable();
-            string sqlDatasource = _configuration.GetConnectionString("JewelrySystemDBConn");
-            SqlDataReader myReader;
-            using (SqlConnection myConn = new SqlConnection(sqlDatasource))
-            {
-                myConn.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myConn))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myConn.Close();
-                }
-            }
-            return new JsonResult(table);
-        }
-
-        /*[HttpGet]
-        [Route("DeleteJewelry")]
-        public JsonResult DeleteJewelry()
-        {
-            string query = "update Jewelry set status = 0 where AccId = @AccId";
-            DataTable table = new DataTable();
-            string sqlDatasource = _configuration.GetConnectionString("JewelrySystemDBConn");
-            SqlDataReader myReader;
-            using (SqlConnection myConn = new SqlConnection(sqlDatasource))
-            {
-                myConn.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myConn))
-                {
-                    myCommand.Parameters.AddWithValue("@AccId", );
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myConn.Close();
-                }
-            }
-            return new JsonResult(table);
-        } */
+        
     
 

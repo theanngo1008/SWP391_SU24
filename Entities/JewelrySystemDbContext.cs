@@ -30,7 +30,7 @@ public partial class JewelrySystemDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<LoyaltyCard> LoyaltyCards { get; set; }
 
-
+    public virtual DbSet<JewelryGemstone> JewelryGemstones { get; set; }
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
@@ -93,16 +93,25 @@ public partial class JewelrySystemDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.GemstoneCost).HasColumnType("money");
             entity.Property(e => e.GemstoneName).HasMaxLength(50);
 
-            entity.HasOne(d => d.Jewelry).WithMany(p => p.Gemstones)
+        });
+
+        modelBuilder.Entity<JewelryGemstone>(entity =>
+        {
+            entity.HasKey(e => new { e.JewelryId, e.GemstoneId });
+
+            entity.HasOne(d => d.Gemstone).WithMany(p => p.JewelryGemstones)
+                .HasForeignKey(d => d.GemstoneId)
+                .HasConstraintName("FK__JewelryGe__Gemst__245D67DE");
+
+            entity.HasOne(d => d.Jewelry).WithMany(p => p.JewelryGemstones)
                 .HasForeignKey(d => d.JewelryId)
-                .HasConstraintName("FK__Gemstones__Jewel__75A278F5");
+                .HasConstraintName("FK__JewelryGe__Jewel__236943A5");
         });
 
         modelBuilder.Entity<Jewelry>(entity =>
         {
             entity.HasKey(e => e.JewelryId).HasName("PK__Jewelrie__807031D57F4EC531");
 
-            entity.Property(e => e.Cost).HasColumnType("money");
             entity.Property(e => e.JewelryName).HasMaxLength(100);
             entity.Property(e => e.SubCateId)
                 .HasMaxLength(20)

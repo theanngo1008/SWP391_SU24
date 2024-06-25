@@ -25,6 +25,7 @@ options.UseSqlServer(builder.Configuration.GetConnectionString("JewelrySystemDBC
 builder.Services.AddHttpClient<SpotMetalPriceService>();
 builder.Services.AddScoped<SpotMetalPriceService>();
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<JewelryService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<JewelrySystemDbContext>()
@@ -99,6 +100,11 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1"));
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
 
 

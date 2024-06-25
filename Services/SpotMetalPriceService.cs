@@ -12,15 +12,15 @@ namespace BE.Services
         private readonly HttpClient _httpClient;
         private readonly GoldApiSettings _settings;
 
-        public SpotMetalPriceService (JewelrySystemDbContext context, HttpClient httpClient, IOptions<GoldApiSettings> settings)
+        public SpotMetalPriceService(JewelrySystemDbContext context, HttpClient httpClient, IOptions<GoldApiSettings> settings)
         {
             _context = context;
             _httpClient = httpClient;
             _settings = settings.Value;
-        }   
+        }
 
         public async Task UpdateSpotMetalPrice()
-        { 
+        {
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
@@ -37,7 +37,7 @@ namespace BE.Services
                 response.EnsureSuccessStatusCode();
             }
 
-            var responseData = await response.Content.ReadAsStringAsync(); 
+            var responseData = await response.Content.ReadAsStringAsync();
             var goldData = JsonConvert.DeserializeObject<GoldApiResponse>(responseData);
 
             var goldPrice = new SpotMetalPrice
@@ -59,6 +59,21 @@ namespace BE.Services
             return await _context.SpotMetalPrices
                 .Where(p => p.DateRecorded >= startDate && p.DateRecorded <= endDate)
                 .ToListAsync();
+        }
+
+        public async Task<decimal> GetGoldPriceAtTime()
+        {
+            var lastestPrice = await _context.SpotMetalPrices
+                .Where(smp => smp.MetalType == "Gold")
+                .OrderByDescending(smp => smp.DateRecorded)
+                .FirstOrDefaultAsync();
+
+            if (lastestPrice == null)
+            {
+                throw new InvalidOperationException("No gold price recorded!!!");
+            }
+
+            return lastestPrice.SpotPrice.Value;
         }
     }
 }

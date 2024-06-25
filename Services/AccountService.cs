@@ -27,6 +27,9 @@ namespace BE.Services
             {
                 return (null, null, null);
             }
+            
+            account.LastLoginDate = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]); // Lấy khóa bí mật từ cấu hình
@@ -46,6 +49,7 @@ namespace BE.Services
             string redirectUrl = account.Role switch
             {
                 "MN" => "/users/jewelry/createJewelry",
+                "AD" => "/admin",
                 _ => "/home"
             };
 

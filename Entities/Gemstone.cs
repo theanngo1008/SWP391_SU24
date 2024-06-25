@@ -9,13 +9,11 @@ public partial class Gemstone
 
     public string? GemstoneName { get; set; }
 
-    public byte[]? Image { get; set; }
+    public string? Image { get; set; }
 
     public decimal? GemstoneCost { get; set; }
 
     public bool? Status { get; set; }
 
-    public int? JewelryId { get; set; }
-
-    public virtual Jewelry? Jewelry { get; set; }
+    public virtual ICollection<JewelryGemstone> JewelryGemstones { get; set; } = new List<JewelryGemstone>();
 }

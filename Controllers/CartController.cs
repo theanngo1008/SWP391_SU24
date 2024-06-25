@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using BE.Extensions;
 using BE.Entities;
+using Microsoft.EntityFrameworkCore;
+using BE.Services;
 
 
 namespace BE.Controllers
@@ -12,36 +14,73 @@ namespace BE.Controllers
     public class CartController : ControllerBase
     {
         private readonly JewelrySystemDbContext _context;
+        private readonly SpotMetalPriceService _smpservice;
 
-        public CartController(JewelrySystemDbContext context)
+        public CartController(JewelrySystemDbContext context, SpotMetalPriceService smpservice)
         {
             _context = context;
+            _smpservice = smpservice;
         }
 
         [HttpPost("AddToCart")]
-        public async Task<IActionResult> AddToCart(int productId, int quantity)
+        public async Task<IActionResult> AddToCart(AddToCartRequest request)
         {
-            var jewelry = await _context.Jewelries.FindAsync(productId);
+            var jewelry = await _context.Jewelries.FindAsync(request.ProductId);
             if (jewelry == null)
             {
                 return NotFound("Product not found!!!");
             }
 
+    
+
+            decimal goldPrice;
+            try
+            {
+                goldPrice = await _smpservice.GetGoldPriceAtTime();
+            }
+            catch
+            {
+                return StatusCode(500, "Error retrieving gold price!!!");
+            }
+
+            var makingCharges = await _context.JewelryMakingCharges.FirstOrDefaultAsync(jmc => jmc.ChargeId == jewelry.ChargeId);
+            if (makingCharges == null)
+            {
+                return BadRequest("Making Charges are not available for this jewelry!!!");
+            }
+
+            decimal gemstoneCost = 0;
+            foreach (var selectedGemstone in request.Gemstones) 
+            {
+                var gemstone = await _context.Gemstones.FindAsync(selectedGemstone.GemstoneId);
+                if (gemstone == null)
+                {
+                    return BadRequest(($"Gemstone with ID {selectedGemstone.GemstoneId} not found!!!"));
+                }
+                gemstoneCost += gemstone.GemstoneCost.Value * selectedGemstone.Quantity;
+            }
+
+            var jewelryCost = (goldPrice * request.Weight) + makingCharges.Price + gemstoneCost;
+
             var cart = HttpContext.Session.GetSessionObject<Cart>("Cart") ?? new Cart();
 
-            var cartItem = cart.Items.FirstOrDefault(item => item.ProductId == productId);
+            var cartItem = cart.Items.FirstOrDefault(item => item.ProductId == request.ProductId);
 
             if (cartItem != null)
             {
-                cartItem.Quantity += quantity;
+                cartItem.Quantity += request.Quantity;
+                cartItem.Weight = request.Weight;
+                cartItem.Gemstones = request.Gemstones;
             }
             else
             {
                 cart.Items.Add(new CartItem
                 {
-                    ProductId = productId,
-                    Quantity = quantity,
-                    Price = jewelry.Cost.Value //lưu giá sản phẩm vào giỏ
+                    ProductId = request.ProductId,
+                    Quantity = request.Quantity,
+                    Price = jewelryCost.Value, //lưu giá sản phẩm vào giỏ
+                    Weight = request.Weight,
+                    Gemstones = request.Gemstones
                 });
             }
 

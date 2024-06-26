@@ -131,7 +131,6 @@ namespace BE.Controllers
             }
 
             _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
             HttpContext.Session.Remove("Cart");
 
             return Ok("Order placed successfully");

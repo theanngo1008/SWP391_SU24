@@ -1,17 +1,28 @@
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 import "./style.scss";
 import { AiOutlineFacebook, AiOutlineInstagram, AiOutlineLinkedin, AiOutlineMail, AiOutlineMenu, AiOutlinePhone, AiOutlineShoppingCart, AiOutlineUser } from "react-icons/ai";
 import { BiLogoMessenger, BiLogoYoutube, BiPhone, BiUser } from "react-icons/bi";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import logo from './logoHeader.jpg';
 import logo1 from './logo1.webp'
 import { ROUTERS } from "utils/router";
 import Login from 'components/Login';
 import Register from 'components/Register';
+import { useNavigate } from 'react-router-dom';
 const Header = () => {
   const [showPopup, setShowPopup] = useState(null); // null: không popup, 'login': login, 'register': register
   const [user, setUser] = useState(null);
   const [accName, setAccName] = useState('');
+  const navigate = useNavigate();
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    const savedAccName = localStorage.getItem('accName');
+
+    if (savedUser && savedAccName) {
+      setUser(savedUser);
+      setAccName(savedAccName);
+    }
+  }, []);
   const handleLoginClick = () => {
     setShowPopup('login');
   };
@@ -26,6 +37,9 @@ const Header = () => {
   const handleLogout = () => {
     setUser(null);
     setAccName('');
+    localStorage.removeItem('user');
+    localStorage.removeItem('accName');
+    navigate('/');
   };
   const [isShowHumberger, setShowHumberger] = useState(false);
   const [menus] = useState([
@@ -214,12 +228,24 @@ const Header = () => {
                       </>
                     ) : (
                       <>
-                        <span>{accName}!</span>
+                        <span>{accName}</span>
                         <button onClick={handleLogout}>Logout</button>
                       </>
                     )}
 
-                    {showPopup === 'login' && <Login toggle={handleClosePopup} setUser={setUser} setAccName={setAccName} />}
+                    {showPopup === 'login' && (
+                      <Login
+                        toggle={handleClosePopup}
+                        setUser={(user) => {
+                          setUser(user);
+                          localStorage.setItem('user', user);
+                        }}
+                        setAccName={(name) => {
+                          setAccName(name);
+                          localStorage.setItem('accName', name);
+                        }}
+                      />
+                    )}
                     {showPopup === 'register' && <Register toggle={handleClosePopup} />}
                   </div>
                 </li>

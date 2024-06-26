@@ -1,4 +1,5 @@
 
+
 export const ROUTERS = {
     USER: {
         HOME: "",
@@ -13,10 +14,17 @@ export const ROUTERS = {
         NECKLACEMEN: "NECKLACEMEN",
         CART: "cart",
         CHECKOUT: "checkout",
-        GOLDPRICE: "gold-price"
-
+        GOLDPRICE: "gold-price",
+        LISTSALESTAFF: "list-sale-staff",
+        CHAT: "chat"
     },
     MANAGER: {
         CREATEPRODUCT: "create-product",
+    },
+    ADMIN: {
+        MANAGEACCOUNT: "manage-accounts",
+    },
+    SALESTAFF: {
+        CHAT: "chat"
     }
 };

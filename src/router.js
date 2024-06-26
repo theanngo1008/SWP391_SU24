@@ -15,6 +15,10 @@ import Profile from './pages/users/profilePage/Profile';
 import CreateProduct from './pages/manager/CreateProduct/CreateProduct';
 import ManagerLayout from './pages/manager/ManagerLayout/ManagerLayout';
 import GoldPriceTracker from 'pages/users/goldPriceTracker/GoldPriceTracker';
+import AdminLayout from 'pages/admin/AdminLayout/AdminLayout';
+import ManageAccount from 'pages/admin/ManageAccount/ManageAccount';
+import ListSaleStaff from 'pages/users/listSaleStaffPage/ListSaleStaff';
+import Chat from 'components/Chat';
 
 function renderUserRouter() {
     const userRouters = [
@@ -62,6 +66,14 @@ function renderUserRouter() {
             path: ROUTERS.USER.GOLDPRICE,
             component: <GoldPriceTracker />,
         },
+        {
+            path: ROUTERS.USER.LISTSALESTAFF,
+            component: <ListSaleStaff />,
+        },
+        {
+            path: ROUTERS.USER.CHAT,
+            component: <Chat />,
+        },
     ];
 
     return (
@@ -95,13 +107,34 @@ function renderManagerRouter() {
     );
 }
 
+function renderAdminRouter() {
+    const adminRouters = [
+        {
+            path: ROUTERS.ADMIN.MANAGEACCOUNT,
+            component: <ManageAccount />,
+        },
+    ];
+    return (
+        <AdminLayout>
+            <Routes>
+                {adminRouters.map((item, key) => (
+                    <Route key={key} path={item.path} element={item.component} />
+                ))}
+            </Routes>
+        </AdminLayout>
+    );
+}
+
 const RouterCustom = () => {
     return (
         <Routes>
             <Route path="/*" element={renderUserRouter()} />
             <Route path="/manager/*" element={renderManagerRouter()} />
+            <Route path="/admin/*" element={renderAdminRouter()} />
         </Routes>
     );
 };
+
+
 
 export default RouterCustom;

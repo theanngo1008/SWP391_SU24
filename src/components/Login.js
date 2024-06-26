@@ -13,8 +13,6 @@ function Login({ toggle, setUser, setAccName }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
-    const [message, setMessage] = useState('');
-    const [token, setToken] = useState(null);
     const API_URL = "http://localhost:5229/";
 
     const handleSubmit = async (e) => {
@@ -26,7 +24,14 @@ function Login({ toggle, setUser, setAccName }) {
             });
 
             if (response.data) {
-                setToken(response.data.token);
+                const token = response.data.token;
+                const account = response.data.account;
+
+                // Lưu token và thông tin tài khoản vào localStorage
+                localStorage.setItem('token', token);
+                localStorage.setItem('account', JSON.stringify(account)); // Chuyển đổi đối tượng thành chuỗi JSON
+
+                console.log("Logged in account:", account); // Thêm log để kiểm tra
 
                 if (rememberMe) {
                     localStorage.setItem('email', email);
@@ -37,13 +42,15 @@ function Login({ toggle, setUser, setAccName }) {
                 }
 
                 setUser(email);
-                setAccName(response.data.account.accName);
+                setAccName(account.accName);
 
                 // Kiểm tra vai trò của người dùng và chuyển hướng
-                if (response.data.account.role === 'MN') {
+                if (account.role === 'MN') {
                     navigate('/manager/');
+                } else if (account.role === 'AD') {
+                    navigate('/admin/');
                 } else {
-                    navigate('/');
+                    navigate('/'); // Chuyển hướng đến trang chat sau khi đăng nhập thành công
                 }
 
                 toggle(); // Đóng popup
@@ -59,15 +66,37 @@ function Login({ toggle, setUser, setAccName }) {
     };
 
     useEffect(() => {
+        // Xóa tất cả các mục trong localStorage khi khởi động dự án
+        localStorage.clear();
+
         const savedEmail = localStorage.getItem('email');
         const savedPassword = localStorage.getItem('password');
+        const token = localStorage.getItem('token');
+
+        console.log('Saved Email:', savedEmail);
+        console.log('Saved Password:', savedPassword);
+        console.log('Token:', token);
 
         if (savedEmail && savedPassword) {
             setEmail(savedEmail);
             setPassword(savedPassword);
             setRememberMe(true);
         }
-    }, []);
+
+        if (token) {
+            const account = localStorage.getItem('account');
+            if (account) {
+                try {
+                    const parsedAccount = JSON.parse(account);
+                    console.log('Parsed Account:', parsedAccount);
+                    setUser(parsedAccount.email);
+                    setAccName(parsedAccount.accName);
+                } catch (error) {
+                    console.error('Failed to parse account from localStorage', error);
+                }
+            }
+        }
+    }, [navigate, setUser, setAccName]);
 
     return (
         <div className="popup">

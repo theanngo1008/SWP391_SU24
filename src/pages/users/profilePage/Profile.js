@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Profile.scss';
+
 function Profile({ user, setUser }) {
-    const [fullName, setFullName] = useState('');
-    const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
-    const [address, setAddress] = useState('');
-    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({
+        accName: '',
+        email: '',
+        phone: '',
+        address: '',
+        password: ''
+    });
     const [message, setMessage] = useState('');
 
     useEffect(() => {
@@ -17,10 +20,14 @@ function Profile({ user, setUser }) {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const userDetails = response.data;
-                setFullName(userDetails.fullName);
-                setEmail(userDetails.email);
-                setPhone(userDetails.phone);
-                setAddress(userDetails.address);
+                setFormData({
+
+                    email: userDetails.email,
+                    accName: userDetails.accName,
+                    phone: userDetails.phone,
+                    address: userDetails.address,
+                    password: ''
+                });
             } catch (error) {
                 console.error('Error fetching user details', error);
             }
@@ -29,20 +36,22 @@ function Profile({ user, setUser }) {
         fetchUserDetails();
     }, []);
 
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.put('http://localhost:5229/api/Account/UpdateProfile', {
-                fullName: fullName,
-                email: email,
-                phone: phone,
-                address: address,
-                password: password
-            }, {
+            const response = await axios.put('http://localhost:5229/api/Account/UpdateProfile', formData, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             setMessage('Profile updated successfully!');
-            setUser(email); // Update user email in parent component
+            setUser(formData.email); // Update user email in parent component
         } catch (error) {
             console.error('Error updating profile', error);
             setMessage('Failed to update profile');
@@ -53,25 +62,51 @@ function Profile({ user, setUser }) {
         <div className="profile">
             <h2>Edit Profile</h2>
             <form onSubmit={handleSubmit}>
-                <label>
-                    Full Name
-                    <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                </label>
+
                 <label>
                     Email
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                    />
+                </label>
+                <label>
+                    Account Name
+                    <input
+                        type="text"
+                        name="accName"
+                        value={formData.accName}
+                        onChange={handleChange}
+                    />
                 </label>
                 <label>
                     Phone Number
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                    />
                 </label>
                 <label>
                     Address
-                    <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} />
+                    <input
+                        type="text"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                    />
                 </label>
                 <label>
                     Password
-                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                    <input
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                    />
                 </label>
                 <button type="submit">Save</button>
             </form>

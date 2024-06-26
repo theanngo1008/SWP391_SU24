@@ -1,0 +1,43 @@
+.manage-account {
+    padding: 20px;
+
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .account-table {
+        width: 100%;
+        border-collapse: collapse;
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+
+            &:hover {
+                background-color: #ddd;
+            }
+        }
+    }
+}

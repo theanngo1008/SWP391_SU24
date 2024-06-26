@@ -1,0 +1,40 @@
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #333;
+    color: #fff;
+
+    &__logo {
+        font-size: 24px;
+
+        a {
+            color: #fff;
+            text-decoration: none;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+
+    &__nav {
+        ul {
+            list-style: none;
+            display: flex;
+            gap: 15px;
+
+            li {
+                a {
+                    color: #fff;
+                    text-decoration: none;
+
+                    &:hover {
+                        text-decoration: underline;
+                    }
+                }
+            }
+        }
+    }
+}

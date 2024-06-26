@@ -30,5 +30,7 @@ namespace BE.Controllers
             var prices = await _service.GetGoldPricesForYear2024();
             return Ok(prices);
         }
+
+
     }
 }

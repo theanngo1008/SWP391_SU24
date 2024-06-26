@@ -69,7 +69,8 @@ namespace BE.Controllers
                     account.Password,
                     account.NumberPhone,
                     account.Deposit,
-                    account.Address
+                    account.Address,
+                    account.Role
                 }
             });
         }

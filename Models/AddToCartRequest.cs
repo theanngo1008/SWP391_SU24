@@ -1,18 +1,15 @@
-﻿using System.Xml;
+﻿using BE.Entities;
 
 namespace BE.Models
 {
-    public class CartItem
+    public class AddToCartRequest
     {
         public int ProductId { get; set; }
 
         public int Quantity { get; set; }
 
         public decimal Weight { get; set; }
-        public decimal Price { get; set; }  //lưu giá sản phẩm tại thời điểm thêm vào giỏ
 
         public List<SelectedGemstone> Gemstones { get; set; }
     }
-
-    
 }

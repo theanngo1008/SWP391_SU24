@@ -27,7 +27,7 @@ public partial class Jewelry
 
     public virtual JewelryMakingCharge? Charge { get; set; }
 
-    public virtual ICollection<Gemstone> Gemstones { get; set; } = new List<Gemstone>();
+    public virtual ICollection<JewelryGemstone> JewelryGemstones { get; set; } = new List<JewelryGemstone>();
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 

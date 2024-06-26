@@ -22,6 +22,8 @@ public partial class Account
     public string? Role { get; set; }
 
     public int? Status { get; set; }
+    
+    public DateTime? LastLoginDate { get; set; }
 
     public virtual LoyaltyCard? LoyaltyCard { get; set; }
 

@@ -1,0 +1,23 @@
+/* src/styles/ChatSalestaff.scss */
+.chatContainer {
+    padding: 20px;
+    .messageList {
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 20px;
+    }
+    .sentMessage {
+        background-color: #e0f7fa;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 5px 0;
+        text-align: right;
+    }
+    .receivedMessage {
+        background-color: #f1f1f1;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 5px 0;
+        text-align: left;
+    }
+}

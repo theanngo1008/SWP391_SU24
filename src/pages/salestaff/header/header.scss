@@ -1,0 +1,29 @@
+// src/styles/HeaderSalestaff.scss
+.header-salestaff {
+    background-color: #333;
+    color: white;
+    padding: 10px 0;
+
+    nav {
+        ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+
+            li {
+                margin: 0 15px;
+
+                a {
+                    color: white;
+                    text-decoration: none;
+                    transition: color 0.3s ease;
+
+                    &:hover {
+                        color: #ddd;
+                    }
+                }
+            }
+        }
+    }
+}

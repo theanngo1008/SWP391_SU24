@@ -19,6 +19,8 @@ import AdminLayout from 'pages/admin/AdminLayout/AdminLayout';
 import ManageAccount from 'pages/admin/ManageAccount/ManageAccount';
 import ListSaleStaff from 'pages/users/listSaleStaffPage/ListSaleStaff';
 import Chat from 'components/Chat';
+import SaleStaffLayout from 'pages/salestaff/saleStaffLayout/saleStaffLayout';
+import ChatSalestaff from 'pages/salestaff/chatForSaleStaff/ChatSaleStaff';
 
 function renderUserRouter() {
     const userRouters = [
@@ -106,6 +108,25 @@ function renderManagerRouter() {
         </ManagerLayout>
     );
 }
+function renderSaleStaffRouter() {
+    const saleStaffRouters = [
+        {
+            path: ROUTERS.SALESTAFF.CHAT,
+            component: <ChatSalestaff />,
+        }
+        // Add more manager routes here if needed
+    ];
+
+    return (
+        <SaleStaffLayout>
+            <Routes>
+                {saleStaffRouters.map((item, key) => (
+                    <Route key={key} path={item.path} element={item.component} />
+                ))}
+            </Routes>
+        </SaleStaffLayout>
+    );
+}
 
 function renderAdminRouter() {
     const adminRouters = [
@@ -131,6 +152,7 @@ const RouterCustom = () => {
             <Route path="/*" element={renderUserRouter()} />
             <Route path="/manager/*" element={renderManagerRouter()} />
             <Route path="/admin/*" element={renderAdminRouter()} />
+            <Route path="/sale-staff/*" element={renderSaleStaffRouter()} />
         </Routes>
     );
 };

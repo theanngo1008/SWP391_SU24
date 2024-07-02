@@ -1,4 +1,6 @@
-﻿namespace BE.Models
+﻿using BE.Models;
+
+namespace BE.Services
 {
     public class Cart
     {

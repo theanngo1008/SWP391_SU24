@@ -1,5 +1,6 @@
 ﻿using BE.Entities;
 using BE.Models;
+using BE.Services;
 using Firebase.Storage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,54 @@ namespace BE.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class GemstoneController : ControllerBase
-    {
+    {  
+        private readonly GemstoneService _service;
+
+        public GemstoneController(GemstoneService service)
+        {
+            _service = service;
+        }
+
+        [HttpGet("GetGemstones")]
+        public async Task<ActionResult<IEnumerable<Gemstone>>> GetGemstones()
+        {
+            var gemstones = await _service.GetGemstonesAsync();
+            return Ok(gemstones);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Gemstone>> GetGemstone(int id)
+        {
+            var gemstone = await _service.GetGemstoneByIdAsync(id);
+
+            if (gemstone == null)
+            {
+                return NotFound();
+            }
+
+            return gemstone;
+        }
+
+        [HttpPost("CreateGemstone")]
+        public async Task<IActionResult> CreateGemstone([FromForm] CreateGemstone createGemstone, IFormFile file)
+        {
+            try
+            {
+                var gemstone = await _service.CreateGemstoneAsync(createGemstone, file);
+                return CreatedAtAction(nameof(GetGemstone), new { id = gemstone.GemstoneId }, gemstone);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+
+
+
+        /*
+        
         private readonly JewelrySystemDbContext _context;
         
         public GemstoneController (JewelrySystemDbContext context)
@@ -71,6 +119,6 @@ namespace BE.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetGemstone), new { id = gemstone.GemstoneId }, gemstone);
-        }
+        }*/
     }
 }

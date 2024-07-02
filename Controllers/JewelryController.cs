@@ -1,5 +1,4 @@
 ﻿using BE.Entities;
-using BE.Helper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -8,12 +7,10 @@ using System.Data;
 using System.Data.SqlClient;
 
 using Firebase.Storage;
-using Firebase.Auth.Providers;
 using Firebase.Auth;
 using FirebaseAdmin;
 using Google.Cloud.Storage.V1;
 using Google.Apis.Auth.OAuth2;
-using static System.Net.Mime.MediaTypeNames;
 using Microsoft.EntityFrameworkCore;
 using BE.Models;
 using BE.Services;
@@ -23,8 +20,8 @@ namespace BE.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class JewelryController : ControllerBase
-    {
-
+    { 
+        
         private readonly JewelrySystemDbContext _context;
 
         private readonly IConfiguration _config;
@@ -70,9 +67,7 @@ namespace BE.Controllers
                 Cost = createJewelry.Cost,
                 Quantity = createJewelry.Quantity,
                 Status = true,
-                ChargeId = createJewelry.ChargeId,
                 QuotationId = createJewelry.QuotationId,
-                WarehouseId = createJewelry.WarehouseId,
                 SubCateId = createJewelry.SubCateId
             };
             
@@ -150,6 +145,23 @@ namespace BE.Controllers
             var result = await _service.UpdateJewelry(id, request);
             if (result == null)
                 return NotFound(result);
+            return Ok(result);
+        }
+
+        [HttpGet("Search")]
+        public async Task<IActionResult> Search(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return BadRequest("Jewelry name cannot be empty or whitespace.");
+            }
+
+            var result = await _service.SearchJewelryByName(name);
+            if (result == null || !result.Any())
+            {
+                return NotFound("No jewelry found with the given name.");
+            }
+
             return Ok(result);
         }
     }

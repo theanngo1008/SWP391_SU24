@@ -9,10 +9,10 @@ namespace BE.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class SpotMetalPricesController : ControllerBase
-    {
-        private readonly SpotMetalPriceService _service;
+    { 
+        private readonly SpotGoldPriceService _service;
 
-        public SpotMetalPricesController (SpotMetalPriceService service)
+        public SpotMetalPricesController(SpotGoldPriceService service)
         {
             _service = service;
         }
@@ -25,12 +25,10 @@ namespace BE.Controllers
         }
 
         [HttpGet("GetGoldPricesForYear2024")]
-        public async Task<ActionResult<IEnumerable<SpotMetalPrice>>> GetGoldPricesForYear2024()
+        public async Task<ActionResult<IEnumerable<SpotGoldPrice>>> GetGoldPricesForYear2024()
         {
             var prices = await _service.GetGoldPricesForYear2024();
             return Ok(prices);
-        }
-
-
+        }   
     }
 }

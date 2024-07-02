@@ -9,9 +9,7 @@ public partial class OrderDetail
 
     public int? Quantity { get; set; }
 
-    public decimal? Price { get; set; }
-
-    public DateOnly? CreateDate { get; set; }
+    public DateTime? CreateDate { get; set; }
 
     public string? DetailStatus { get; set; }
 

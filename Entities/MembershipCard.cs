@@ -3,11 +3,17 @@ using System.Collections.Generic;
 
 namespace BE.Entities;
 
-public partial class LoyaltyCard
+public partial class MembershipCard
 {
     public int CardId { get; set; }
 
-    public string? CardName { get; set; }
+    public string CardNumber { get; set; } = null!;
+
+    public DateTime? IssueDate { get; set; }
+
+    public string? MembershipLevel { get; set; }
+
+    public decimal? Points { get; set; }
 
     public bool? Status { get; set; }
 

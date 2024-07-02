@@ -17,23 +17,13 @@ public partial class Jewelry
 
     public bool? Status { get; set; }
 
-    public int? ChargeId { get; set; }
-
     public int? QuotationId { get; set; }
 
-    public int? WarehouseId { get; set; }
-
     public string? SubCateId { get; set; }
-
-    public virtual JewelryMakingCharge? Charge { get; set; }
-
-    public virtual ICollection<JewelryGemstone> JewelryGemstones { get; set; } = new List<JewelryGemstone>();
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
     public virtual Quotation? Quotation { get; set; }
 
     public virtual SubCategory? SubCate { get; set; }
-
-    public virtual Warehouse? Warehouse { get; set; }
 }

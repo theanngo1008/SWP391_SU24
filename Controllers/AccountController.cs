@@ -1,6 +1,8 @@
-﻿using BE.Entities;
+﻿//using BE.Entities;
+using BE.Entities;
 using BE.Models;
 using BE.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore. Http;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
@@ -15,28 +17,27 @@ using System.Text;
 
 namespace BE.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
-    {
-        private readonly JewelrySystemDbContext _context;
+    { 
         private readonly AccountService _service;
 
-        public AccountController(JewelrySystemDbContext context, AccountService service)
+        public AccountController(AccountService service)
         {
-            _context = context;
             _service = service;
         }
 
-        [HttpGet]
-        [Route("GetAccounts")]
+        [HttpGet("GetAccounts")]
         public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
         {
-            return await _context.Accounts.ToListAsync();
+            var accounts = await _service.GetAccountsAsync();
+            return Ok(accounts);
         }
         
         [HttpPost("Login")]
-        public async Task<IActionResult> Login(LoginRequest request)
+        public async Task<IActionResult> Login([FromForm] LoginRequest request)
         {
 
             if (string.IsNullOrEmpty(request.email) || string.IsNullOrEmpty(request.password))
@@ -50,7 +51,7 @@ namespace BE.Controllers
                 {
                     if (account == null)
                     {
-                        return Unauthorized();
+                        return Unauthorized(new {Message = "Incorrect Email or Password!!!"});
                     }
                     if (account.Status == 3)
                     {
@@ -70,17 +71,17 @@ namespace BE.Controllers
                     account.NumberPhone,
                     account.Deposit,
                     account.Address,
-                    account.Role
+                    account.Role,
                 }
             });
         }
 
         [HttpPost("Register")]        
-        public async Task<IActionResult> Register(RegisterRequest request)
+        public async Task<IActionResult> Register([FromForm] RegisterRequest request, IFormFile file)
         {
             try
             {
-                var account = await _service.Register(request);
+                var account = await _service.Register(request, file);
                 return Ok(new { Message = "Registration successful", Account = account });
             }
             catch (Exception ex)
@@ -89,10 +90,17 @@ namespace BE.Controllers
             }
         }
 
-        [HttpGet("Profile")]
+        [Authorize]
+        [HttpPost("Profile")]    
         public async Task<IActionResult> GetProfile()
         {
-            var userEmail = User.FindFirst(ClaimTypes.Name)?.Value;
+            var claims = User.Claims;
+            foreach (var claim in claims)
+            {
+                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
+
+            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userEmail == null)
             {
                 return Unauthorized("User is not authenticated!!!");
@@ -104,9 +112,19 @@ namespace BE.Controllers
                 return NotFound("User not found!!!");
             }
 
-            return Ok(account);
+            return Ok(new
+            {
+                account.AccName,
+                account.Email,
+                account.NumberPhone,
+                account.Deposit,
+                account.Address,
+                account.Role,
+                account.CreateAt,
+                account.LastLoginDate
+            });
         }
-
+        
 
     }
 }

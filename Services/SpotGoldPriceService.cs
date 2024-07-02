@@ -1,4 +1,5 @@
-﻿using BE.Entities;
+﻿//using BE.Entities;
+using BE.Entities;
 using BE.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -6,13 +7,13 @@ using Newtonsoft.Json;
 
 namespace BE.Services
 {
-    public class SpotMetalPriceService
-    {
+    public class SpotGoldPriceService
+    {  
         private readonly JewelrySystemDbContext _context;
         private readonly HttpClient _httpClient;
         private readonly GoldApiSettings _settings;
 
-        public SpotMetalPriceService(JewelrySystemDbContext context, HttpClient httpClient, IOptions<GoldApiSettings> settings)
+        public SpotGoldPriceService(JewelrySystemDbContext context, HttpClient httpClient, IOptions<GoldApiSettings> settings)
         {
             _context = context;
             _httpClient = httpClient;
@@ -40,31 +41,32 @@ namespace BE.Services
             var responseData = await response.Content.ReadAsStringAsync();
             var goldData = JsonConvert.DeserializeObject<GoldApiResponse>(responseData);
 
-            var goldPrice = new SpotMetalPrice
+            var goldPrice = new SpotGoldPrice
             {
-                MetalType = "Gold",
+                GoldType = "Gold",
                 SpotPrice = goldData.Price,
                 DateRecorded = DateTime.UtcNow
             };
 
-            _context.SpotMetalPrices.Add(goldPrice);
+            _context.SpotGoldPrices.Add(goldPrice);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<SpotMetalPrice>> GetGoldPricesForYear2024()
+        public async Task<List<SpotGoldPrice>> GetGoldPricesForYear2024()
         {
             var startDate = new DateTime(2024, 1, 1);
             var endDate = DateTime.UtcNow;
 
-            return await _context.SpotMetalPrices
+            return await _context.SpotGoldPrices
                 .Where(p => p.DateRecorded >= startDate && p.DateRecorded <= endDate)
                 .ToListAsync();
         }
 
+        
         public async Task<decimal> GetGoldPriceAtTime()
         {
-            var lastestPrice = await _context.SpotMetalPrices
-                .Where(smp => smp.MetalType == "Gold")
+            var lastestPrice = await _context.SpotGoldPrices
+                .Where(smp => smp.GoldType == "Gold")
                 .OrderByDescending(smp => smp.DateRecorded)
                 .FirstOrDefaultAsync();
 
@@ -74,6 +76,6 @@ namespace BE.Services
             }
 
             return lastestPrice.SpotPrice.Value;
-        }
+        } 
     }
 }

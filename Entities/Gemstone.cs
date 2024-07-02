@@ -14,6 +14,4 @@ public partial class Gemstone
     public decimal? GemstoneCost { get; set; }
 
     public bool? Status { get; set; }
-
-    public virtual ICollection<JewelryGemstone> JewelryGemstones { get; set; } = new List<JewelryGemstone>();
 }

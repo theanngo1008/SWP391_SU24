@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace BE.Entities;
 
-public partial class JewelrySystemDbContext : IdentityDbContext<ApplicationUser>
+public partial class JewelrySystemDbContext : DbContext
 {
     public JewelrySystemDbContext()
     {
@@ -20,17 +19,20 @@ public partial class JewelrySystemDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<Category> Categories { get; set; }
 
+    public virtual DbSet<Fee> Fees { get; set; }
+
     public virtual DbSet<Gemstone> Gemstones { get; set; }
 
     public virtual DbSet<Jewelry> Jewelries { get; set; }
 
-    public virtual DbSet<JewelryMakingCharge> JewelryMakingCharges { get; set; }
-
-    public virtual DbSet<JewelryMetal> JewelryMetals { get; set; }
-
-    public virtual DbSet<LoyaltyCard> LoyaltyCards { get; set; }
+    public virtual DbSet<JewelryFee> JewelryFees { get; set; }
 
     public virtual DbSet<JewelryGemstone> JewelryGemstones { get; set; }
+
+    public virtual DbSet<JewelryGold> JewelryGolds { get; set; }
+
+    public virtual DbSet<MembershipCard> MembershipCards { get; set; }
+
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
@@ -39,32 +41,29 @@ public partial class JewelrySystemDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<Shipping> Shippings { get; set; }
 
-    public virtual DbSet<SpotMetalPrice> SpotMetalPrices { get; set; }
+    public virtual DbSet<SpotGoldPrice> SpotGoldPrices { get; set; }
 
     public virtual DbSet<SubCategory> SubCategories { get; set; }
 
-    public virtual DbSet<Warehouse> Warehouses { get; set; }
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=jewelrysystemserver.database.windows.net;Initial Catalog=JewelrySystemDB;Persist Security Info=True;User ID=JewelrySystemAdmin;Password=FPTUniQ9;Encrypt=True;Trust Server Certificate=True");
+        => optionsBuilder.UseSqlServer("Data Source=jewelrysystemserver.database.windows.net;Initial Catalog=JewelrySystemDB;Persist Security Info=True;User ID=jewelrysystemadmin;Password=Kid30032001;Encrypt=True;Trust Server Certificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
-
         modelBuilder.Entity<Account>(entity =>
         {
-            entity.HasKey(e => e.AccId).HasName("PK__Accounts__91CBC378F7FBD5BB");
+            entity.HasKey(e => e.AccId).HasName("PK__Accounts__91CBC37895018683");
 
-            entity.HasIndex(e => e.Email, "UQ__Accounts__A9D1053441461045").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__Accounts__A9D1053493CB06F1").IsUnique();
 
             entity.Property(e => e.AccName).HasMaxLength(50);
             entity.Property(e => e.Address).HasMaxLength(100);
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.Deposit).HasColumnType("money");
             entity.Property(e => e.Email)
                 .HasMaxLength(100)
                 .IsUnicode(false);
+            entity.Property(e => e.LastLoginDate).HasColumnType("datetime");
             entity.Property(e => e.NumberPhone)
                 .HasMaxLength(20)
                 .IsUnicode(false);
@@ -74,11 +73,12 @@ public partial class JewelrySystemDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.Role)
                 .HasMaxLength(20)
                 .IsUnicode(false);
+            entity.Property(e => e.UpdateAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.HasKey(e => e.CateId).HasName("PK__Categori__27638D1456F25D59");
+            entity.HasKey(e => e.CateId).HasName("PK__Categori__27638D147E2FC9F4");
 
             entity.Property(e => e.CateId)
                 .HasMaxLength(20)
@@ -86,123 +86,139 @@ public partial class JewelrySystemDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.CateName).HasMaxLength(50);
         });
 
+        modelBuilder.Entity<Fee>(entity =>
+        {
+            entity.HasKey(e => e.FeeId).HasName("PK__Fees__B387B2298065FC00");
+
+            entity.Property(e => e.Amount).HasColumnType("money");
+            entity.Property(e => e.DateAdded).HasColumnType("datetime");
+            entity.Property(e => e.FeeType).HasMaxLength(100);
+        });
+
         modelBuilder.Entity<Gemstone>(entity =>
         {
-            entity.HasKey(e => e.GemstoneId).HasName("PK__Gemstone__05864553E88FC8E4");
+            entity.HasKey(e => e.GemstoneId).HasName("PK__Gemstone__05864553776D99BD");
 
             entity.Property(e => e.GemstoneCost).HasColumnType("money");
             entity.Property(e => e.GemstoneName).HasMaxLength(50);
-
-        });
-
-        modelBuilder.Entity<JewelryGemstone>(entity =>
-        {
-            entity.HasKey(e => new { e.JewelryId, e.GemstoneId });
-
-            entity.HasOne(d => d.Gemstone).WithMany(p => p.JewelryGemstones)
-                .HasForeignKey(d => d.GemstoneId)
-                .HasConstraintName("FK__JewelryGe__Gemst__245D67DE");
-
-            entity.HasOne(d => d.Jewelry).WithMany(p => p.JewelryGemstones)
-                .HasForeignKey(d => d.JewelryId)
-                .HasConstraintName("FK__JewelryGe__Jewel__236943A5");
         });
 
         modelBuilder.Entity<Jewelry>(entity =>
         {
-            entity.HasKey(e => e.JewelryId).HasName("PK__Jewelrie__807031D57F4EC531");
+            entity.HasKey(e => e.JewelryId).HasName("PK__Jewelrie__807031D56B3FB6C3");
 
+            entity.Property(e => e.Cost).HasColumnType("money");
             entity.Property(e => e.JewelryName).HasMaxLength(100);
             entity.Property(e => e.SubCateId)
                 .HasMaxLength(20)
                 .IsUnicode(false);
 
-            entity.HasOne(d => d.Charge).WithMany(p => p.Jewelries)
-                .HasForeignKey(d => d.ChargeId)
-                .HasConstraintName("FK__Jewelries__Charg__6B24EA82");
-
             entity.HasOne(d => d.Quotation).WithMany(p => p.Jewelries)
                 .HasForeignKey(d => d.QuotationId)
-                .HasConstraintName("FK__Jewelries__Quota__6C190EBB");
+                .HasConstraintName("FK__Jewelries__Quota__693CA210");
 
             entity.HasOne(d => d.SubCate).WithMany(p => p.Jewelries)
                 .HasForeignKey(d => d.SubCateId)
-                .HasConstraintName("FK__Jewelries__SubCa__6E01572D");
-
-            entity.HasOne(d => d.Warehouse).WithMany(p => p.Jewelries)
-                .HasForeignKey(d => d.WarehouseId)
-                .HasConstraintName("FK__Jewelries__Wareh__6D0D32F4");
+                .HasConstraintName("FK__Jewelries__SubCa__6A30C649");
         });
 
-        modelBuilder.Entity<JewelryMakingCharge>(entity =>
+        modelBuilder.Entity<JewelryFee>(entity =>
         {
-            entity.HasKey(e => e.ChargeId).HasName("PK__JewelryM__17FC361BB670583F");
+            entity.HasNoKey();
 
-            entity.Property(e => e.ChargeName).HasMaxLength(100);
-            entity.Property(e => e.Price).HasColumnType("money");
+            entity.HasOne(d => d.Fee).WithMany()
+                .HasForeignKey(d => d.FeeId)
+                .HasConstraintName("FK__JewelryFe__FeeId__6D0D32F4");
+
+            entity.HasOne(d => d.Jewelry).WithMany()
+                .HasForeignKey(d => d.JewelryId)
+                .HasConstraintName("FK__JewelryFe__Jewel__6C190EBB");
         });
 
-        modelBuilder.Entity<JewelryMetal>(entity =>
+        modelBuilder.Entity<JewelryGemstone>(entity =>
+        {
+            entity.HasNoKey();
+
+            entity.HasOne(d => d.Gemstone).WithMany()
+                .HasForeignKey(d => d.GemstoneId)
+                .HasConstraintName("FK__JewelryGe__Gemst__76969D2E");
+
+            entity.HasOne(d => d.Jewelry).WithMany()
+                .HasForeignKey(d => d.JewelryId)
+                .HasConstraintName("FK__JewelryGe__Jewel__75A278F5");
+        });
+
+        modelBuilder.Entity<JewelryGold>(entity =>
         {
             entity.HasNoKey();
 
             entity.Property(e => e.Weight).HasColumnType("decimal(10, 2)");
 
+            entity.HasOne(d => d.GoldPrice).WithMany()
+                .HasForeignKey(d => d.GoldPriceId)
+                .HasConstraintName("FK__JewelryGo__GoldP__71D1E811");
+
             entity.HasOne(d => d.Jewelry).WithMany()
                 .HasForeignKey(d => d.JewelryId)
-                .HasConstraintName("FK__JewelryMe__Jewel__71D1E811");
-
-            entity.HasOne(d => d.MetalPrice).WithMany()
-                .HasForeignKey(d => d.MetalPriceId)
-                .HasConstraintName("FK__JewelryMe__Metal__72C60C4A");
+                .HasConstraintName("FK__JewelryGo__Jewel__70DDC3D8");
         });
 
-        modelBuilder.Entity<LoyaltyCard>(entity =>
+        modelBuilder.Entity<MembershipCard>(entity =>
         {
-            entity.HasKey(e => e.CardId).HasName("PK__LoyaltyC__55FECDAE0F841BBC");
+            entity.HasKey(e => e.CardId).HasName("PK__Membersh__55FECDAE0BCE23BA");
 
-            entity.HasIndex(e => e.AccId, "UQ__LoyaltyC__91CBC3793BD880B2").IsUnique();
+            entity.ToTable("MembershipCard");
 
-            entity.Property(e => e.CardName).HasMaxLength(50);
+            entity.HasIndex(e => e.AccId, "UQ__Membersh__91CBC379F2E8676A").IsUnique();
 
-            entity.HasOne(d => d.Acc).WithOne(p => p.LoyaltyCard)
-                .HasForeignKey<LoyaltyCard>(d => d.AccId)
-                .HasConstraintName("FK__LoyaltyCa__AccId__07C12930");
+            entity.HasIndex(e => e.CardNumber, "UQ__Membersh__A4E9FFE923955ADE").IsUnique();
+
+            entity.Property(e => e.CardNumber).HasMaxLength(20);
+            entity.Property(e => e.IssueDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.MembershipLevel).HasMaxLength(50);
+            entity.Property(e => e.Points).HasColumnType("decimal(18, 2)");
+
+            entity.HasOne(d => d.Acc).WithOne(p => p.MembershipCard)
+                .HasForeignKey<MembershipCard>(d => d.AccId)
+                .HasConstraintName("FK__Membershi__AccId__05D8E0BE");
         });
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCFE459E18C");
+            entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF65E717A2");
 
             entity.Property(e => e.OrderStatus).HasMaxLength(50);
 
             entity.HasOne(d => d.Acc).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.AccId)
-                .HasConstraintName("FK__Orders__AccId__7A672E12");
+                .HasConstraintName("FK__Orders__AccId__7B5B524B");
 
             entity.HasOne(d => d.Shipping).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.ShippingId)
-                .HasConstraintName("FK__Orders__Shipping__7B5B524B");
+                .HasConstraintName("FK__Orders__Shipping__7C4F7684");
         });
 
         modelBuilder.Entity<OrderDetail>(entity =>
         {
-            entity.HasKey(e => e.OrderDetailId).HasName("PK__OrderDet__D3B9D36C210EE62C");
+            entity.HasKey(e => e.OrderDetailId).HasName("PK__OrderDet__D3B9D36CC5A78C93");
 
+            entity.Property(e => e.CreateDate).HasColumnType("datetime");
             entity.Property(e => e.DetailStatus).HasMaxLength(50);
 
             entity.HasOne(d => d.Jewelry).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.JewelryId)
-                .HasConstraintName("FK__OrderDeta__Jewel__7E37BEF6");
+                .HasConstraintName("FK__OrderDeta__Jewel__7F2BE32F");
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.OrderId)
-                .HasConstraintName("FK__OrderDeta__Order__7F2BE32F");
+                .HasConstraintName("FK__OrderDeta__Order__00200768");
         });
 
         modelBuilder.Entity<Quotation>(entity =>
         {
-            entity.HasKey(e => e.QuotationId).HasName("PK__Quotatio__E197529315E13AA5");
+            entity.HasKey(e => e.QuotationId).HasName("PK__Quotatio__E1975293712C9295");
 
             entity.Property(e => e.Discount).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.QuotationName).HasMaxLength(50);
@@ -211,28 +227,28 @@ public partial class JewelrySystemDbContext : IdentityDbContext<ApplicationUser>
 
             entity.HasOne(d => d.Acc).WithMany(p => p.Quotations)
                 .HasForeignKey(d => d.AccId)
-                .HasConstraintName("FK__Quotation__AccId__68487DD7");
+                .HasConstraintName("FK__Quotation__AccId__66603565");
         });
 
         modelBuilder.Entity<Shipping>(entity =>
         {
-            entity.HasKey(e => e.ShippingId).HasName("PK__Shipping__5FACD5808D86ADCB");
+            entity.HasKey(e => e.ShippingId).HasName("PK__Shipping__5FACD58063F55D3F");
 
             entity.Property(e => e.ShippingName).HasMaxLength(100);
         });
 
-        modelBuilder.Entity<SpotMetalPrice>(entity =>
+        modelBuilder.Entity<SpotGoldPrice>(entity =>
         {
-            entity.HasKey(e => e.MetalPriceId).HasName("PK__SpotMeta__9601D581348D6B5D");
+            entity.HasKey(e => e.GoldPriceId).HasName("PK__SpotGold__C2C7860CEA932363");
 
             entity.Property(e => e.DateRecorded).HasColumnType("datetime");
-            entity.Property(e => e.MetalType).HasMaxLength(20);
+            entity.Property(e => e.GoldType).HasMaxLength(20);
             entity.Property(e => e.SpotPrice).HasColumnType("money");
         });
 
         modelBuilder.Entity<SubCategory>(entity =>
         {
-            entity.HasKey(e => e.SubCateId).HasName("PK__SubCateg__2A3F754643723416");
+            entity.HasKey(e => e.SubCateId).HasName("PK__SubCateg__2A3F75463D208493");
 
             entity.Property(e => e.SubCateId)
                 .HasMaxLength(20)
@@ -244,15 +260,7 @@ public partial class JewelrySystemDbContext : IdentityDbContext<ApplicationUser>
 
             entity.HasOne(d => d.Cate).WithMany(p => p.SubCategories)
                 .HasForeignKey(d => d.CateId)
-                .HasConstraintName("FK__SubCatego__CateI__6383C8BA");
-        });
-
-        modelBuilder.Entity<Warehouse>(entity =>
-        {
-            entity.HasKey(e => e.WarehouseId).HasName("PK__Warehous__2608AFF9C1983852");
-
-            entity.Property(e => e.Location).HasMaxLength(100);
-            entity.Property(e => e.WarehouseName).HasMaxLength(50);
+                .HasConstraintName("FK__SubCatego__CateI__619B8048");
         });
 
         OnModelCreatingPartial(modelBuilder);

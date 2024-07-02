@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace BE.Entities;
 
-public partial class SpotMetalPrice
+public partial class SpotGoldPrice
 {
-    public int MetalPriceId { get; set; }
+    public int GoldPriceId { get; set; }
 
-    public string MetalType { get; set; } = null!;
+    public string GoldType { get; set; } = null!;
 
     public decimal? SpotPrice { get; set; }
 

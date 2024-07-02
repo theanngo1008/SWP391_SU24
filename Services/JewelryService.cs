@@ -1,11 +1,12 @@
 ﻿using BE.Entities;
 using BE.Models;
-using Firebase.Auth.Requests;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace BE.Services
 {
     public class JewelryService
-    {
+    {  
         private readonly JewelrySystemDbContext _context;
 
         public JewelryService(JewelrySystemDbContext context)
@@ -30,8 +31,6 @@ namespace BE.Services
             jewelry.Cost = request.Cost;
             jewelry.Quantity = request.Quantity;
             jewelry.Status = request.Status;
-            jewelry.ChargeId = request.ChargeId;
-            jewelry.WarehouseId = request.WarehouseId;
             jewelry.SubCateId = request.SubCateId;
 
             if (request.Image != null)
@@ -48,5 +47,17 @@ namespace BE.Services
 
             return "Jewelry updated successfully";
         }
+
+        public async Task<List<Jewelry>> SearchJewelryByName(string jewelryName)
+        {
+            if (string.IsNullOrWhiteSpace(jewelryName))
+            {
+                throw new ArgumentException("Jewelry name cannot be empty or whitespace", nameof(jewelryName));
+            }
+
+            return await _context.Jewelries
+                .Where(j => j.JewelryName != null && j.JewelryName.Contains(jewelryName, StringComparison.OrdinalIgnoreCase))
+                .ToListAsync();
+        } 
     }
 }

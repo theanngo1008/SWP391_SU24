@@ -14,5 +14,8 @@ namespace BE.Models
         public string NumberPhone { get; set; }
 
         public string Address { get; set; }
+
+        public string Role { get; set; }
+
     }
 }

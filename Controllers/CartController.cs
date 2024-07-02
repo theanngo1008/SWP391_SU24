@@ -12,129 +12,54 @@ namespace BE.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class CartController : ControllerBase
-    {
-        private readonly JewelrySystemDbContext _context;
-        private readonly SpotMetalPriceService _smpservice;
-
-        public CartController(JewelrySystemDbContext context, SpotMetalPriceService smpservice)
+    {  /*
+        private readonly CartService _service;
+        public CartController(CartService service)
         {
-            _context = context;
-            _smpservice = smpservice;
+            _service = service;
         }
 
         [HttpPost("AddToCart")]
         public async Task<IActionResult> AddToCart(AddToCartRequest request)
         {
-            var jewelry = await _context.Jewelries.FindAsync(request.ProductId);
-            if (jewelry == null)
+            try 
             {
-                return NotFound("Product not found!!!");
+                await _service.AddToCart(request);
+                return Ok("Product added to cart");
             }
-
-    
-
-            decimal goldPrice;
-            try
+            catch (KeyNotFoundException ex)
             {
-                goldPrice = await _smpservice.GetGoldPriceAtTime();
+                return NotFound(ex.Message);
             }
-            catch
+            catch (InvalidCastException ex)
             {
-                return StatusCode(500, "Error retrieving gold price!!!");
+                return BadRequest(ex.Message);
             }
-
-            var makingCharges = await _context.JewelryMakingCharges.FirstOrDefaultAsync(jmc => jmc.ChargeId == jewelry.ChargeId);
-            if (makingCharges == null)
-            {
-                return BadRequest("Making Charges are not available for this jewelry!!!");
-            }
-
-            decimal gemstoneCost = 0;
-            foreach (var selectedGemstone in request.Gemstones) 
-            {
-                var gemstone = await _context.Gemstones.FindAsync(selectedGemstone.GemstoneId);
-                if (gemstone == null)
-                {
-                    return BadRequest(($"Gemstone with ID {selectedGemstone.GemstoneId} not found!!!"));
-                }
-                gemstoneCost += gemstone.GemstoneCost.Value * selectedGemstone.Quantity;
-            }
-
-            var jewelryCost = (goldPrice * request.Weight) + makingCharges.Price + gemstoneCost;
-
-            var cart = HttpContext.Session.GetSessionObject<Cart>("Cart") ?? new Cart();
-
-            var cartItem = cart.Items.FirstOrDefault(item => item.ProductId == request.ProductId);
-
-            if (cartItem != null)
-            {
-                cartItem.Quantity += request.Quantity;
-                cartItem.Weight = request.Weight;
-                cartItem.Gemstones = request.Gemstones;
-            }
-            else
-            {
-                cart.Items.Add(new CartItem
-                {
-                    ProductId = request.ProductId,
-                    Quantity = request.Quantity,
-                    Price = jewelryCost.Value, //lưu giá sản phẩm vào giỏ
-                    Weight = request.Weight,
-                    Gemstones = request.Gemstones
-                });
-            }
-
-            HttpContext.Session.SetSessionObject("Cart", cart);
-
-            return Ok("Product added to cart");
         }
 
         [HttpGet("GetCart")]
         public IActionResult GetCart()
         {
-            var cart = HttpContext.Session.GetSessionObject<Cart>("Cart") ?? new Cart();
+            var cart = _service.GetCart();
             return Ok(cart);
         }
 
         [HttpPost("PlaceOrder")]
         public async Task<IActionResult> PlaceOrder([FromBody] int accountId)
         {
-            var cart = HttpContext.Session.GetSessionObject<Cart>("Cart");
-            if (cart == null || !cart.Items.Any())
+            try
             {
-                return BadRequest("Cart is empty");
+                await _service.PlaceOrder();
+                return Ok("Order placed successfully");
             }
-
-            var order = new Order
+            catch (KeyNotFoundException ex)
             {
-                AccId = accountId,
-                OrderDate = DateOnly.FromDateTime(DateTime.Now),
-                OrderDetails = new List<OrderDetail>()
-            };
-
-            foreach (var cartItem in cart.Items)
+                return NotFound(ex.Message);
+            } 
+            catch (InvalidOperationException ex)
             {
-                var jewelry = await _context.Jewelries.FindAsync(cartItem.ProductId);
-                if (jewelry == null)
-                {
-                    return BadRequest($"Jewelry with ID {cartItem.ProductId} not found");
-                }
-
-                order.OrderDetails.Add(new OrderDetail
-                {
-                    JewelryId = cartItem.ProductId,
-                    Quantity = cartItem.Quantity,
-                    Price = jewelry.Cost.Value
-                }); ;
-
-
+                return BadRequest(ex.Message);
             }
-
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-            HttpContext.Session.Remove("Cart");
-
-            return Ok("Order placed successfully");
-        }
+        }*/
     }
 }

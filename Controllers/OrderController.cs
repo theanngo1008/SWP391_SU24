@@ -10,7 +10,7 @@ namespace BE.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class OrderController : ControllerBase
-    {
+    { 
         private readonly JewelrySystemDbContext _context;
 
         public OrderController(JewelrySystemDbContext context)
@@ -55,7 +55,7 @@ namespace BE.Controllers
                 OrderDetails = orderRequest.OrderDetails.Select(od => new OrderDetail
                 {
                     Quantity = od.Quantity,
-                    CreateDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    //CreateDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     DetailStatus = od.DetailStatus,
                     JewelryId = od.JewelryId
                 }).ToList()
@@ -103,3 +103,4 @@ namespace BE.Controllers
         public int JewelryId { get; set; }
     }
 }
+

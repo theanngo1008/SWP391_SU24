@@ -21,11 +21,17 @@ public partial class Account
 
     public string? Role { get; set; }
 
-    public int? Status { get; set; }
-    
+    public string? Image { get; set; }
+
     public DateTime? LastLoginDate { get; set; }
 
-    public virtual LoyaltyCard? LoyaltyCard { get; set; }
+    public DateTime? CreateAt { get; set; }
+
+    public DateTime? UpdateAt { get; set; }
+
+    public int? Status { get; set; }
+
+    public virtual MembershipCard? MembershipCard { get; set; }
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 

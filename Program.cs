@@ -22,46 +22,35 @@ builder.Services.AddSwaggerGen();
 //Add services to the container
 builder.Services.AddDbContext<JewelrySystemDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("JewelrySystemDBConn")));
-builder.Services.AddHttpClient<SpotMetalPriceService>();
-builder.Services.AddScoped<SpotMetalPriceService>();
+builder.Services.AddHttpClient<SpotGoldPriceService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<SpotGoldPriceService>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<JewelryService>();
-
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<JewelrySystemDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddScoped<GemstoneService>();
+builder.Services.AddScoped<CartService>();
 
 builder.Services.Configure<GoldApiSettings>(builder.Configuration.GetSection("GoldAPI"));
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
+// Configure JWT authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-    };
-});
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("RequireManagerRole", policy => policy.RequireRole("MN"));
-    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("AD"));
-    options.AddPolicy("RequireCustomerRole", policy => policy.RequireRole("US"));
-    options.AddPolicy("RequireSalesStaffRole", policy => policy.RequireRole("SS"));
-    options.AddPolicy("RequireDesignStaffRole", policy => policy.RequireRole("DS"));
-    options.AddPolicy("RequireProductionStaffRole", policy => policy.RequireRole("PS"));
-    // Thêm các chính sách khác nếu cần
-});
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
 
 
 //Enable CORS
@@ -83,8 +72,8 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-
-/*FirebaseApp.Create(new AppOptions()
+/*
+FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile("appsettings.json")
 });*/
@@ -123,6 +112,7 @@ app.Use(async (context, next) =>
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
 app.UseCors("AllowAll");
 
 app.UseSession();

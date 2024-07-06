@@ -1,11 +1,6 @@
-﻿using BE.Models;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using BE.Extensions;
-using BE.Entities;
 using Microsoft.EntityFrameworkCore;
-using BE.Services;
-
 
 namespace BE.Controllers
 {

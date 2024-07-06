@@ -1,16 +1,16 @@
-﻿using BE.Entities;
+﻿//using JewelryProductionOrder.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
 
-namespace BE.Controllers
+namespace JewelryProductionOrder.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class OrderController : ControllerBase
-    { 
+    { /*
         private readonly JewelrySystemDbContext _context;
 
         public OrderController(JewelrySystemDbContext context)
@@ -71,7 +71,7 @@ namespace BE.Controllers
                 order.OrderStatus,
                 order.Status,
                 account.AccName,
-                ShippingName = shipping?.ShippingName,
+                shipping?.ShippingName,
                 OrderDetail = order.OrderDetails.Select(od => new
                 {
                     od.OrderDetailId,
@@ -101,6 +101,7 @@ namespace BE.Controllers
         public int Quantity { get; set; }
         public string DetailStatus { get; set; }
         public int JewelryId { get; set; }
+    } */
     }
 }
 

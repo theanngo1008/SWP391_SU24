@@ -1,13 +1,16 @@
-﻿using BE.Entities;
-using BE.Models;
-using BE.Services;
-using FirebaseAdmin;
+﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using JewelryProductionOrder.Data.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using JewelryProductionOrder.BusinessLogic.RequestModels.Gold;
+using JewelryProductionOrder.BusinessLogic.Services.Implementation;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
+using JewelryProductionOrder.BusinessLogic.Services.Interface;
 //using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,20 +22,22 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//Add services to the container
+//Add services to the container 
 builder.Services.AddDbContext<JewelrySystemDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("JewelrySystemDBConn")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("JewelrySystemDBConn")));
+
 builder.Services.AddHttpClient<SpotGoldPriceService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<SpotGoldPriceService>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<JewelryService>();
 builder.Services.AddScoped<GemstoneService>();
 builder.Services.AddScoped<CartService>();
+builder.Services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
+builder.Services.AddScoped<IServiceWrapper, ServiceWrapper>();
 
 builder.Services.Configure<GoldApiSettings>(builder.Configuration.GetSection("GoldAPI"));
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
 // Configure JWT authentication
 builder.Services.AddAuthentication(options =>
@@ -44,14 +49,29 @@ builder.Services.AddAuthentication(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+            ValidIssuer = builder.Configuration["JWTAuthentication:Issuer"],
+            ValidAudience = builder.Configuration["JWTAuthentication:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTAuthentication:Key"]!))
         };
     });
 
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization using the Bearer scheme. \"Bearer\" is not needed.Just paste the jwt"
+    });
+    options.OperationFilter<SecurityRequirementsOperationFilter>();
+});
 
 //Enable CORS
 builder.Services.AddCors(options =>

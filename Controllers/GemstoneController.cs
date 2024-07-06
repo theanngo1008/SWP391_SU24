@@ -1,17 +1,17 @@
-﻿using BE.Entities;
-using BE.Models;
-using BE.Services;
-using Firebase.Storage;
+﻿using Firebase.Storage;
+using JewelryProductionOrder.BusinessLogic.RequestModels.Gemstone;
+using JewelryProductionOrder.BusinessLogic.Services.Implementation;
+//using JewelryProductionOrder.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BE.Controllers
+namespace JewelryProductionOrder.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class GemstoneController : ControllerBase
-    {  
+    {   /*
         private readonly GemstoneService _service;
 
         public GemstoneController(GemstoneService service)

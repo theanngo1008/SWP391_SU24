@@ -1,15 +1,15 @@
-﻿using BE.Entities;
-using BE.Services;
+﻿using JewelryProductionOrder.BusinessLogic.Services.Implementation;
+//using JewelryProductionOrder.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.CompilerServices;
 
-namespace BE.Controllers
+namespace JewelryProductionOrder.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class SpotMetalPricesController : ControllerBase
-    { 
+    {  /*
         private readonly SpotGoldPriceService _service;
 
         public SpotMetalPricesController(SpotGoldPriceService service)
@@ -29,6 +29,6 @@ namespace BE.Controllers
         {
             var prices = await _service.GetGoldPricesForYear2024();
             return Ok(prices);
-        }   
+        }    */
     }
 }

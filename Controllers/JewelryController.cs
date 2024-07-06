@@ -1,26 +1,26 @@
-﻿using BE.Entities;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using System.Data;
 using System.Data.SqlClient;
-
 using Firebase.Storage;
 using Firebase.Auth;
 using FirebaseAdmin;
 using Google.Cloud.Storage.V1;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
-using BE.Models;
-using BE.Services;
+//using JewelryProductionOrder.Data.Entities;
+using JewelryProductionOrder.BusinessLogic.RequestModels.Jewelry;
+using JewelryProductionOrder.BusinessLogic.Services.Implementation;
 
-namespace BE.Controllers
+
+namespace JewelryProductionOrder.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class JewelryController : ControllerBase
-    { 
+    {  /*
         
         private readonly JewelrySystemDbContext _context;
 
@@ -40,7 +40,7 @@ namespace BE.Controllers
 
         [HttpPost]
         [Route("CreateJewelry")]
-        public async Task<IActionResult> CreateJewelry([FromForm] CreateJewelry createJewelry, IFormFile file)
+        public async Task<IActionResult> CreateJewelry([FromForm] CreateJewelryRequest createJewelry, IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -49,6 +49,7 @@ namespace BE.Controllers
 
             var stream = file.OpenReadStream();
             var firebaseStorage = new FirebaseStorage("projectswp-7bb14.appspot.com");
+
             var fileName = Path.GetFileName(file.FileName);
 
 
@@ -163,7 +164,7 @@ namespace BE.Controllers
             }
 
             return Ok(result);
-        }
+        } */
     }
 }
 
